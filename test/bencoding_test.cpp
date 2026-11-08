@@ -3,21 +3,24 @@
 #include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("Parse Bencode integers", "[bencoding]") {
-  auto result = parse("i42e");
+  BencodeParser parser("i42e");
+  auto result = parser.parse_value();
 
   REQUIRE(std::holds_alternative<int64_t>(result.value));
   REQUIRE(std::get<int64_t>(result.value) == 42);
 }
 
 TEST_CASE("Parse Bencode strings", "[bencoding]") {
-  auto result = parse("5:hello");
+  BencodeParser parser("5:hello");
+  auto result = parser.parse_value();
 
   REQUIRE(std::holds_alternative<std::string>(result.value));
   REQUIRE(std::get<std::string>(result.value) == "hello");
 }
 
 TEST_CASE("Parse Bencode lists", "[bencoding]") {
-  auto result = parse("li1e5:helloe");
+  BencodeParser parser("li1e5:helloe");
+  auto result = parser.parse_value();
 
   REQUIRE(std::holds_alternative<BencodeValue::List>(result.value));
 
@@ -29,7 +32,8 @@ TEST_CASE("Parse Bencode lists", "[bencoding]") {
 }
 
 TEST_CASE("Parse Bencode dictionaries", "[bencoding]") {
-  auto result = parse("d3:agei18e4:name4:Johne");
+  BencodeParser parser("d3:agei18e4:name4:Johne");
+  auto result = parser.parse_value();
 
   REQUIRE(std::holds_alternative<BencodeValue::Dictionary>(result.value));
 
@@ -39,5 +43,5 @@ TEST_CASE("Parse Bencode dictionaries", "[bencoding]") {
   REQUIRE(dict.contains("name"));
 
   REQUIRE(std::get<int64_t>(dict.at("age").value) == 18);
-  REQUIRE(std::get<std::string>(dict.at("name").value) == "John ");
+  REQUIRE(std::get<std::string>(dict.at("name").value) == "John");
 }
