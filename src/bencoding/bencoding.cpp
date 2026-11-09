@@ -52,7 +52,25 @@ BencodeValue BencodeParser::parse_integer() {
 
   return BencodeValue{value};
 }
-BencodeValue BencodeParser::parse_list() { return BencodeValue{}; }
+
+BencodeValue BencodeParser::parse_list() {
+  std::vector<BencodeValue> list{};
+
+  consume();  // l
+
+  while (!at_end() && peek() != 'e') {
+    list.push_back(parse_value());
+  }
+
+  if (at_end()) {
+    throw std::runtime_error("unterminated list");
+  }
+
+  consume();  // e
+
+  return BencodeValue{std::move(list)};
+}
+
 BencodeValue BencodeParser::parse_string() {
   std::string length_string{};
 
