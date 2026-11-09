@@ -25,7 +25,7 @@ class BencodeParser {
 
   char peek() { return m_input[m_position]; };
   char consume() { return m_input[m_position++]; };
-  bool at_end() { return m_position <= m_input.size(); }
+  bool at_end() { return m_position >= m_input.size(); }
 
  public:
   explicit BencodeParser(std::string_view data) : m_input(data) {}
