@@ -22,7 +22,6 @@ BencodeValue BencodeParser::parse_value() {
       std::cout << std::format("invalid character: {}\n", peek());
       exit(1);
   }
-  return BencodeValue{};
 }
 
 BencodeValue BencodeParser::parse_integer() { return BencodeValue{}; }
