@@ -10,6 +10,14 @@ TEST_CASE("Parse Bencode integers", "[bencoding]") {
   REQUIRE(std::get<int64_t>(result.value) == 42);
 }
 
+TEST_CASE("parses Bencode negative integers", "[bencoding]") {
+  BencodeParser parser("i-42e");
+  auto result = parser.parse_value();
+
+  REQUIRE(std::holds_alternative<int64_t>(result.value));
+  REQUIRE(std::get<int64_t>(result.value) == -42);
+}
+
 TEST_CASE("Parse Bencode strings", "[bencoding]") {
   BencodeParser parser("5:hello");
   auto result = parser.parse_value();
