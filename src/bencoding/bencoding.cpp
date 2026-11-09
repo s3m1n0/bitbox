@@ -107,4 +107,34 @@ BencodeValue BencodeParser::parse_string() {
   return BencodeValue{std::move(result)};
 }
 
-BencodeValue BencodeParser::parse_dictionary() { return BencodeValue{}; }
+BencodeValue BencodeParser::parse_dictionary() {
+  BencodeValue::Dictionary dictionary{};
+
+  consume();  // d
+
+  while (!at_end() && peek() != 'e') {
+    // Dictionary keys must be strings
+    if (!std::isdigit(static_cast<unsigned char>(peek()))) {
+      throw std::runtime_error("Expected string as dictionary key");
+    }
+
+    std::string key = std::get<std::string>(parse_string().value);
+
+    // Parse the corresponding value
+    BencodeValue value = parse_value();
+
+    auto [it, inserted] = dictionary.emplace(std::move(key), std::move(value));
+
+    if (!inserted) {
+      throw std::runtime_error("Duplicate dictionary key");
+    }
+  }
+
+  if (at_end()) {
+    throw std::runtime_error("Unterminated dictionary");
+  }
+
+  consume();  // e
+
+  return BencodeValue{std::move(dictionary)};
+}
