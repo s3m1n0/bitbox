@@ -1,6 +1,7 @@
 #ifndef BENCODING_H
 #define BENCODING_H
 
+#include <cstdint>
 #include <map>
 #include <string>
 #include <string_view>
@@ -25,11 +26,10 @@ class BencodeParser {
 
   char peek() { return m_input[m_position]; };
   char consume() { return m_input[m_position++]; };
-  bool at_end() { return m_position >= m_input.size(); }
-
  public:
   explicit BencodeParser(std::string_view data) : m_input(data) {}
 
+  bool at_end() { return m_position >= m_input.size(); }
   BencodeValue parse_value();
 };
 BencodeValue parse(std::string_view raw_data);

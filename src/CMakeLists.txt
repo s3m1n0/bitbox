@@ -1,5 +1,6 @@
 add_library(${PROJECT_NAME}_lib
     bencoding/bencoding.cpp
+    bittorent/bittorent.cpp
 )
 
 add_executable(${PROJECT_NAME}

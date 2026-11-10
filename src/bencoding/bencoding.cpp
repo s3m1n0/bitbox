@@ -6,6 +6,10 @@
 #include <stdexcept>
 
 BencodeValue BencodeParser::parse_value() {
+  if (at_end()) {
+    throw std::runtime_error("unexpected end of input");
+  }
+
   switch (peek()) {
     case 'i':
       return parse_integer();
@@ -17,12 +21,11 @@ BencodeValue BencodeParser::parse_value() {
       return parse_dictionary();
 
     default:
-      if (std::isdigit(peek())) {
+      if (std::isdigit(static_cast<unsigned char>(peek()))) {
         return parse_string();
       }
 
-      std::cout << std::format("invalid character: {}\n", peek());
-      exit(1);
+      throw std::runtime_error("invalid bencoded value");
   }
 }
 
@@ -41,7 +44,7 @@ BencodeValue BencodeParser::parse_integer() {
 
   consume();  // e
 
-  int value{};
+  int64_t value{};
 
   auto [ptr, ec] = std::from_chars(
       int_string.data(), int_string.data() + int_string.size(), value);
@@ -137,4 +140,15 @@ BencodeValue BencodeParser::parse_dictionary() {
   consume();  // e
 
   return BencodeValue{std::move(dictionary)};
+}
+
+BencodeValue parse(std::string_view raw_data) {
+  BencodeParser parser(raw_data);
+  BencodeValue value = parser.parse_value();
+
+  if (!parser.at_end()) {
+    throw std::runtime_error("trailing data after parse");
+  }
+
+  return value;
 }
