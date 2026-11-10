@@ -7,8 +7,6 @@
 
 #include "../bencoding/bencoding.hpp"
 
-namespace {
-
 const BencodeValue::Dictionary& as_dictionary(const BencodeValue& value,
                                               const std::string& context) {
   if (const auto* dictionary =
@@ -126,8 +124,6 @@ std::vector<std::string> parse_path(const BencodeValue& value) {
 
   return path;
 }
-
-}  // namespace
 
 BittorrentConfig bittorentConfigFactory(const BencodeValue& value) {
   const auto& root = as_dictionary(value, "torrent root");
