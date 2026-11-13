@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "../bencoding/bencoding.hpp"
@@ -15,14 +16,16 @@ struct BittorrentFileInfo {
   std::vector<std::string> path;
 };
 
+using BittorentSingleFile = size_t;
+using TorrentFiles =
+    std::variant<BittorentSingleFile, std::vector<BittorrentFileInfo>>;
+
 struct BittorrentInfo {
   std::string name;
   std::size_t piece_length{};
   std::vector<std::string> pieces;
 
-  // Single-file or multi-file torrent
-  std::size_t length{};
-  std::vector<BittorrentFileInfo> files;
+  TorrentFiles files;
 };
 
 class BittorrentConfig {
