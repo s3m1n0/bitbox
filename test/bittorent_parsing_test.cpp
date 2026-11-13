@@ -1,6 +1,9 @@
 
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <string>
+#include <variant>
+#include <vector>
 
 #include "../src/bencoding/bencoding.hpp"
 #include "../src/bittorent/bittorent.hpp"
@@ -20,16 +23,21 @@ TEST_CASE("BittorrentConfig factory", "[bittorrent][config]") {
     const auto value = parse(data);
     const auto config = bittorentConfigFactory(value);
 
-    REQUIRE(config.announce == "http://tracker");
+    REQUIRE(std::get<std::string>(config.announce) == "http://tracker");
+
     REQUIRE(config.info.name == "test.bin");
-    REQUIRE(config.info.length == 12345);
     REQUIRE(config.info.piece_length == 16384);
 
-    REQUIRE(config.info.pieces.size() == 2);
-    REQUIRE(config.info.pieces[0] == "12345678901234567890");
-    REQUIRE(config.info.pieces[1] == "12345678901234567890");
+    REQUIRE(std::holds_alternative<std::size_t>(config.info.files));
+    REQUIRE(std::get<std::size_t>(config.info.files) == 12345);
 
-    REQUIRE(config.info.files.empty());
+    REQUIRE(config.info.pieces.size() == 2);
+    const std::array<std::uint8_t, 20> expected = {
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+
+    REQUIRE(config.info.pieces[0] == expected);
+    REQUIRE(config.info.pieces[1] == expected);
   }
 
   SECTION("Parses a multi-file torrent") {
@@ -54,20 +62,35 @@ TEST_CASE("BittorrentConfig factory", "[bittorrent][config]") {
     const auto config = bittorentConfigFactory(value);
 
     REQUIRE(config.info.name == "test-dir");
-    REQUIRE(config.info.files.size() == 2);
+    REQUIRE(config.info.piece_length == 16384);
 
-    REQUIRE(config.info.files[0].length == 100);
-    REQUIRE(config.info.files[0].path.size() == 2);
-    REQUIRE(config.info.files[0].path[0] == "dir");
-    REQUIRE(config.info.files[0].path[1] == "a.txt");
+    REQUIRE(std::holds_alternative<std::vector<BittorrentFileInfo>>(
+        config.info.files));
 
-    REQUIRE(config.info.files[1].length == 200);
-    REQUIRE(config.info.files[1].path.size() == 2);
-    REQUIRE(config.info.files[1].path[0] == "dir");
-    REQUIRE(config.info.files[1].path[1] == "b.txt");
+    const auto& files =
+        std::get<std::vector<BittorrentFileInfo>>(config.info.files);
+
+    REQUIRE(files.size() == 2);
+
+    REQUIRE(files[0].length == 100);
+    REQUIRE(files[0].path.size() == 2);
+    REQUIRE(files[0].path[0] == "dir");
+    REQUIRE(files[0].path[1] == "a.txt");
+
+    REQUIRE(files[1].length == 200);
+    REQUIRE(files[1].path.size() == 2);
+    REQUIRE(files[1].path[0] == "dir");
+    REQUIRE(files[1].path[1] == "b.txt");
 
     REQUIRE(config.info.pieces.size() == 1);
-    REQUIRE(config.info.length == 0);
+
+    // Total size of a multi-file torrent.
+    std::size_t total_length = 0;
+    for (const auto& file : files) {
+      total_length += file.length;
+    }
+
+    REQUIRE(total_length == 300);
   }
 
   SECTION("Parses announce-list") {
@@ -90,10 +113,14 @@ TEST_CASE("BittorrentConfig factory", "[bittorrent][config]") {
     const auto value = parse(data);
     const auto config = bittorentConfigFactory(value);
 
-    REQUIRE(config.announce_list.size() == 3);
-    REQUIRE(config.announce_list[0] == "tracker1");
-    REQUIRE(config.announce_list[1] == "tracker2");
-    REQUIRE(config.announce_list[2] == "tracker3");
+    REQUIRE(std::holds_alternative<std::vector<std::string>>(config.announce));
+
+    const auto& trackers = std::get<std::vector<std::string>>(config.announce);
+
+    REQUIRE(trackers.size() == 3);
+    REQUIRE(trackers[0] == "tracker1");
+    REQUIRE(trackers[1] == "tracker2");
+    REQUIRE(trackers[2] == "tracker3");
   }
 }
 
