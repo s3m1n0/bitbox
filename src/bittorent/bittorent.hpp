@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -16,28 +17,30 @@ struct BittorrentFileInfo {
   std::vector<std::string> path;
 };
 
-using BittorentSingleFile = size_t;
+using BittorentSingleFile = std::size_t;
 using TorrentFiles =
     std::variant<BittorentSingleFile, std::vector<BittorrentFileInfo>>;
 
 struct BittorrentInfo {
   std::string name;
   std::size_t piece_length{};
-  std::vector<std::string> pieces;
+  std::vector<std::array<std::uint8_t, 20>> pieces;
 
   TorrentFiles files;
 };
 
-class BittorrentConfig {
- public:
-  BittorrentConfig(std::string announce, std::vector<std::string> announce_list,
-                   std::string name)
-      : announce(std::move(announce)), announce_list(std::move(announce_list)) {
-    info.name = std::move(name);
-  }
+using Announce = std::variant<std::string, std::vector<std::string>>;
+struct BittorrentConfig {
+  //  public:
+  //   BittorrentConfig(std::string announce, std::string name,
+  //                    std::size_t piece_length,
+  //                    std::vector<std::array<std::uint8_t, 20>> pieces,
+  //                    TorrentFiles files)
+  //       : announce(std::move(announce)),
+  //         info{std::move(name), piece_length, std::move(pieces),
+  //              std::move(files)} {};
 
-  std::string announce;
-  std::vector<std::string> announce_list;
+  Announce announce;
 
   BittorrentInfo info;
 };
